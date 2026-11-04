@@ -9,7 +9,7 @@ crons = ["*/15 * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "endfield-bot"
-database_id = "00000000-0000-0000-0000-000000000000" # replaced after `wrangler d1 create endfield-bot`
+database_id = "f8319fa4-78d6-418e-82f6-0379549ef072"
 migrations_dir = "migrations"
 
 [observability]

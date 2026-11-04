@@ -1,0 +1,16 @@
+name = "endfield-bot"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "endfield-bot"
+database_id = "00000000-0000-0000-0000-000000000000" # replaced after `wrangler d1 create endfield-bot`
+migrations_dir = "migrations"
+
+[observability]
+enabled = true

@@ -42,7 +42,7 @@ check("operator card", r4.json?.type === 4 && texts(r4.json).includes("Аркл�
 const r5 = await send({ ...base, type: 3, message: { flags: 32768 | 64 }, data: { custom_id: "op|Arclight|s", component_type: 2 } });
 check("tab button updates message", r5.json?.type === 7 && texts(r5.json).includes("Battle Skill"), r5.json);
 const r6 = await send({ ...base, type: 3, message: { flags: 32768 | 64 }, data: { custom_id: "pub|op|Arclight|s", component_type: 2 } });
-check("show everyone -> public message", r6.json?.type === 4 && (r6.json.data.flags & 64) === 0, r6.json);
+check("show everyone -> silent ack (card is re-posted, private one removed)", r6.json?.type === 6, r6.json);
 const r7 = await send(cmd("factory", [{ name: "product", type: 3, value: "Ferrium Part" }, { name: "rate", type: 10, value: 60 }]));
 check("factory chain", texts(r7.json).includes("Refining Unit"), r7.json);
 const r8 = await send({ ...base, type: 3, message: { flags: 32768 | 64 }, data: { custom_id: "fam|Ferrium Part", component_type: 2 } });

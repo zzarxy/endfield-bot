@@ -51,6 +51,36 @@ const ctxOf = (i: any, shared: boolean): Ctx => ({
   shared,
 });
 
+/**
+ * "Show everyone": post the card publicly, then remove the private one so only one copy remains.
+ * The interaction is acknowledged silently (deferred update) and everything else happens afterwards.
+ */
+async function publish(env: Env, i: any, components: Component[]) {
+  const hook = `https://discord.com/api/v10/webhooks/${env.DISCORD_APP_ID}/${i.token}`;
+  const payload = JSON.stringify({ flags: FLAG_V2, components, allowed_mentions: { parse: [] } });
+  const post = await fetch(`${hook}?wait=true`, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload });
+  if (!post.ok) return; // keep the private card
+  const sent: any = await post.json();
+  if (sent.flags & FLAG_EPHEMERAL) {
+    // Discord made the follow-up private as well: drop it and post as the bot instead (needs access to the channel)
+    await fetch(`${hook}/messages/${sent.id}`, { method: "DELETE" });
+    if (!i.channel_id) return;
+    const viaBot = await discord(env.DISCORD_TOKEN, "POST", `/channels/${i.channel_id}/messages`, JSON.parse(payload));
+    if (!viaBot.ok) return;
+  }
+  await fetch(`${hook}/messages/@original`, { method: "DELETE" });
+}
+
+const ackSilently = () => json({ type: InteractionResponseType.DeferredMessageUpdate });
+
+async function publishWiki(env: Env, i: any, query: string) {
+  try {
+    await publish(env, i, (await wikiCard(query, true)).components);
+  } catch {
+    /* wiki unavailable: the private card stays, the user can press the button again */
+  }
+}
+
 async function deferWiki(env: Env, i: any, query: string, shared: boolean) {
   let body: { components: Component[] };
   try {
@@ -159,10 +189,13 @@ async function handle(request: Request, env: Env, ectx: ExecutionContext): Promi
       const id: string = i.data.custom_id;
       const shared = !((i.message?.flags ?? 0) & FLAG_EPHEMERAL);
       if (id.startsWith("pub|wk|")) {
-        ectx.waitUntil(deferWiki(env, i, id.slice(7), true));
-        return json({ type: InteractionResponseType.DeferredChannelMessageWithSource, data: {} });
+        ectx.waitUntil(publishWiki(env, i, id.slice(7)));
+        return ackSilently();
       }
-      if (id.startsWith("pub|")) return message(render(id.slice(4), ctxOf(i, true)).components, false);
+      if (id.startsWith("pub|")) {
+        ectx.waitUntil(publish(env, i, render(id.slice(4), ctxOf(i, true)).components));
+        return ackSilently();
+      }
       if (id.startsWith("fam|")) {
         const item = id.slice(4);
         return json({

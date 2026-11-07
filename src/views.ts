@@ -6,7 +6,7 @@ import { findExact } from "./lib/search.ts";
 import { renderTree, fmtRate } from "./lib/factory.ts";
 import { nextDailyReset, nextWeeklyReset } from "./lib/time.ts";
 import {
-  BRAND_COLOR, RARITY_COLOR, button, clip, container, fileUrl, fmtMats, footer, linkButton, row, section,
+  BRAND_COLOR, RARITY_COLOR, button, clip, container, fileUrl, fmtMats, footer, gallery, linkButton, row, section,
   separator, stars, text, ts, wikiUrl, type Component,
 } from "./lib/ui.ts";
 import type { Server } from "./data/types.ts";
@@ -46,7 +46,9 @@ function operatorView(name: string, tab: string, ctx: Ctx): Rendered {
   if (!op) return notFound("operators", name);
   const state = stateId("op", op.name, tab);
   const head = `## ${titleOf(op.name, op.ru, ctx)}\n${stars(op.rarity)} · ${op.element} ${op.class} · ${op.weapon}\n-# ${op.faction}`;
-  const body: Component[] = [section(head, fileUrl(op.icon)), separator()];
+  const body: Component[] = op.banner
+    ? [gallery(fileUrl(op.banner)!), text(head), separator()]
+    : [section(head, fileUrl(op.icon)), separator()];
 
   if (tab === "s") {
     let s = "";

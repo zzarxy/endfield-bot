@@ -46,7 +46,7 @@ async function main() {
 
   // ---------- Operators ----------
   const opRows = await cargo("Operators", [
-    "Operator", "Icon", "Splash", "Rarity", "Class", "Weapon", "Element", "Faction", "Tags", "MainAttr", "SubAttr",
+    "Operator", "Icon", "Banner", "Splash", "Rarity", "Class", "Weapon", "Element", "Faction", "Tags", "MainAttr", "SubAttr",
   ]);
   const opTexts = await wikitexts(opRows.map((r) => decode(r.Operator)));
   const operators: Operator[] = [];
@@ -107,6 +107,7 @@ async function main() {
       summary: lead(text),
       icon: r.Icon || undefined,
       splash: r.Splash || undefined,
+      banner: r.Banner || undefined,
       maxStats,
       promotions,
       potentials,

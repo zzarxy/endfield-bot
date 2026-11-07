@@ -42,6 +42,12 @@ export function section(content: string, thumbnail?: string): Component {
   };
 }
 
+/** Full-width image (wide art is shown uncropped, unlike a Thumbnail). */
+export const gallery = (url: string): Component => ({
+  type: ComponentType.MediaGallery,
+  items: [{ media: { url } }],
+});
+
 export function button(label: string, customId: string, opts: { active?: boolean; style?: ButtonStyle } = {}): Component {
   return {
     type: ComponentType.Button,

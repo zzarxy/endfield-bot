@@ -22,6 +22,7 @@ export interface Operator {
   summary: string;
   icon?: string;
   splash?: string;
+  banner?: string; // wide (900x352) card art
   maxStats: Record<string, string>;
   promotions: { stage: number; mats: Mat[] }[];
   potentials: Potential[];

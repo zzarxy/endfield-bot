@@ -4,8 +4,9 @@ import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { cargo, raw, wikitexts, descriptions, modules } from "./wiki.ts";
 import { templates, clean, materials, lead, type Params } from "./wikitext.ts";
 import { parseLuaData } from "./lua.ts";
+import { WIKI_LANG, type Lang } from "../src/i18n.ts";
 import type {
-  Dataset, Operator, Weapon, Gear, GearSet, Item, Enemy, Recipe, Facility, TimedEntry, Server, Mat,
+  Names, Dataset, Operator, Weapon, Gear, GearSet, Item, Enemy, Recipe, Facility, TimedEntry, Server, Mat,
 } from "../src/data/types.ts";
 
 const decode = (s: string) => s.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
@@ -39,10 +40,37 @@ function localToUnix(s: string | undefined, offsetMin: number): number | undefin
 }
 
 async function main() {
-  // Names in Russian (Locales has ~2k ru names: operators, items, weapons...).
-  const ruRows = await cargo("Locales", ["Entity", "Value"], "Lang='ru' AND Param='name'");
-  const ru = new Map(ruRows.map((r) => [decode(r.Entity), decode(r.Value)]));
-  log("ru names", ru.size);
+  // Localized names (Locales has ~2k names per language: operators, items, weapons, gear, enemies, facilities).
+  const codeToLang = new Map(Object.entries(WIKI_LANG).map(([lang, code]) => [code, lang as Lang]));
+  const codes = [...codeToLang.keys()].map((c) => `'${c}'`).join(",");
+  const nameRows = await cargo("Locales", ["Entity", "Lang", "Value"], `Param='name' AND Lang IN (${codes})`);
+  const nameMap = new Map<string, Names>();
+  for (const r of nameRows) {
+    const key = decode(r.Entity);
+    const value = decode(r.Value).trim();
+    if (!value) continue;
+    const entry = nameMap.get(key) ?? {};
+    entry[codeToLang.get(r.Lang)!] = value;
+    nameMap.set(key, entry);
+  }
+  log("localized entities", nameMap.size);
+  // Weapon/gear/set/facility pages carry their names in the infobox (|runame = ...), not in Locales.
+  const INFO_KEYS: Record<string, Lang> = { runame: "ru", spname: "es", jpname: "ja", krname: "ko", cnname: "zh", tcname: "tc" };
+  const infoNames = (text?: string): Names => {
+    const out: Names = {};
+    for (const [key, lang] of Object.entries(INFO_KEYS)) {
+      const m = text?.match(new RegExp(`\\|\\s*${key}\\s*=([^\\n|]*)`));
+      const v = m?.[1].trim();
+      if (v) out[lang] = decode(v);
+    }
+    return out;
+  };
+  /** Names for an entity, dropping languages where the name equals the English one. */
+  const namesOf = (name: string, extra: Names = {}): Names | undefined => {
+    const merged: Names = { ...extra, ...nameMap.get(name) };
+    for (const [lang, v] of Object.entries(merged)) if (!v || v === name) delete merged[lang as Lang];
+    return Object.keys(merged).length ? merged : undefined;
+  };
 
   // ---------- Operators ----------
   const opRows = await cargo("Operators", [
@@ -94,7 +122,9 @@ async function main() {
 
     operators.push({
       name,
-      ru: ru.get(name) ?? (info.runame || undefined),
+      names: namesOf(name, {
+        ru: info.runame, es: info.spname, ja: info.jpname, ko: info.krname, zh: info.cnname, tc: info.tcname,
+      }),
       rarity: num(r.Rarity),
       class: r.Class,
       weapon: r.Weapon,
@@ -140,7 +170,7 @@ async function main() {
       .filter((a) => a.mats.length);
     return {
       name,
-      ru: ru.get(name),
+      names: namesOf(name, infoNames(text)),
       rarity: num(r.Rarity),
       type: r.Type,
       source: clean(r.Source),
@@ -161,6 +191,7 @@ async function main() {
     "SValue3", "TStat", "TValue0", "TValue1", "TValue2", "TValue3", "SetName",
   ]);
   const gStats = new Map(gsRows.map((r) => [decode(r.Gear), r]));
+  const gTexts = await wikitexts(gRows.map((r) => decode(r.Gear)));
   const gear: Gear[] = gRows
     .filter((r) => !/ T\d$/.test(decode(r.Gear))) // T1..T3 refinement variants clutter search
     .map((r) => {
@@ -174,7 +205,7 @@ async function main() {
         }));
       return {
         name,
-        ru: ru.get(name),
+        names: namesOf(name, infoNames(gTexts.get(name))),
         rarity: num(r.Rarity),
         type: r.Type,
         level: num(r.Level),
@@ -186,11 +217,12 @@ async function main() {
       };
     });
   const setRows = await cargo("GearSets", ["GearSet", "Icon", "Level", "Effect"]);
+  const sTexts = await wikitexts(setRows.map((r) => decode(r.GearSet)));
   const sets: GearSet[] = setRows.map((r) => {
     const name = decode(r.GearSet);
     return {
       name,
-      ru: ru.get(name),
+      names: namesOf(name, infoNames(sTexts.get(name))),
       level: num(r.Level),
       effect: clean(r.Effect),
       pieces: gear.filter((g) => g.set === name).map((g) => g.name),
@@ -208,7 +240,7 @@ async function main() {
     const d = iDesc.get(name);
     return {
       name,
-      ru: ru.get(name),
+      names: namesOf(name),
       rarity: num(r.Rarity),
       type: r.Type,
       use: clean(d?.itemUse),
@@ -225,7 +257,7 @@ async function main() {
     const name = decode(r.Enemy);
     return {
       name,
-      ru: ru.get(name),
+      names: namesOf(name),
       type: r.Type,
       class: r.Class,
       summary: clean(eDesc.get(name)),
@@ -259,9 +291,10 @@ async function main() {
   }
   const fRows = await cargo("Facilities", ["Facility", "Icon", "Power"]);
   const overrides = existsSync("data/overrides.json") ? JSON.parse(readFileSync("data/overrides.json", "utf8")) : {};
+  const fTexts = await wikitexts(fRows.map((r) => decode(r.Facility)));
   const facilities: Facility[] = fRows.map((r) => {
     const name = decode(r.Facility);
-    return { name, power: overrides.power?.[name] ?? (r.Power ? Number(r.Power) : undefined), icon: r.Icon || undefined };
+    return { name, names: namesOf(name, infoNames(fTexts.get(name))), power: overrides.power?.[name] ?? (r.Power ? Number(r.Power) : undefined), icon: r.Icon || undefined };
   });
   log("recipes", recipes.length, "facilities", facilities.length);
 

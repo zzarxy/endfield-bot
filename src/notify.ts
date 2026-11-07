@@ -1,5 +1,6 @@
 // Channel subscriptions (/notify) and the cron job that posts banner/event/reset notifications.
-import { data, server, span } from "./data/index.ts";
+import { data, server, span, localName } from "./data/index.ts";
+import { t, type Lang, type Key } from "./i18n.ts";
 import { nextDailyReset } from "./lib/time.ts";
 import { BRAND_COLOR, RARITY_COLOR, container, fileUrl, footer, section, separator, text, ts, FLAG_V2, type Component } from "./lib/ui.ts";
 import { discord } from "./lib/discord.ts";
@@ -17,6 +18,7 @@ export interface Sub {
   guild_id: string;
   channel_id: string;
   server: Server["id"];
+  lang: Lang;
   role_id: string | null;
   banners: number;
   events: number;
@@ -30,11 +32,11 @@ const RESET_REMINDER = 3600; // remind 1h before daily reset
 
 export async function subscribe(env: Env, s: Omit<Sub, "id" | "failures">) {
   await env.DB.prepare(
-    `INSERT INTO subscriptions (guild_id, channel_id, server, role_id, banners, events, resets, created_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-     ON CONFLICT(channel_id) DO UPDATE SET server = ?3, role_id = ?4, banners = ?5, events = ?6, resets = ?7, failures = 0`,
+    `INSERT INTO subscriptions (guild_id, channel_id, server, lang, role_id, banners, events, resets, created_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+     ON CONFLICT(channel_id) DO UPDATE SET server = ?3, lang = ?4, role_id = ?5, banners = ?6, events = ?7, resets = ?8, failures = 0`,
   )
-    .bind(s.guild_id, s.channel_id, s.server, s.role_id, s.banners, s.events, s.resets, Math.floor(Date.now() / 1000))
+    .bind(s.guild_id, s.channel_id, s.server, s.lang, s.role_id, s.banners, s.events, s.resets, Math.floor(Date.now() / 1000))
     .run();
 }
 
@@ -51,18 +53,18 @@ export async function list(env: Env, guildId: string): Promise<Sub[]> {
 /** A notification that is due: key is stable so it is sent once per subscription. */
 interface Due { key: string; at: number; components: Component[] }
 
-function entryCard(e: TimedEntry, srv: Server["id"], title: string): Component[] {
+function entryCard(e: TimedEntry, srv: Server["id"], title: string, lang: Lang): Component[] {
   const sp = span(e, srv)!;
   const op = e.rateUp ? data.operators.find((o) => o.name === e.rateUp) : undefined;
   let s = `### ${title}\n**${e.name}**`;
-  if (e.rateUp) s += ` — rate-up **${e.rateUp}**`;
+  if (e.rateUp) s += ` — ${t(lang, "rate_up")} **${localName(e.rateUp, lang)}**`;
   if (e.type) s += ` · ${e.type}`;
-  s += `\n${ts(sp.start)} → ${ts(sp.end)} (ends ${ts(sp.end, "R")})`;
+  s += `\n${ts(sp.start)} → ${ts(sp.end)} (${t(lang, "ends")} ${ts(sp.end, "R")})`;
   return [
     container(op ? RARITY_COLOR[op.rarity] : BRAND_COLOR, [
       section(s, fileUrl(op?.icon ?? e.image)),
       separator(),
-      footer(data.syncedAt),
+      footer(data.syncedAt, lang),
     ]),
   ];
 }
@@ -70,19 +72,21 @@ function entryCard(e: TimedEntry, srv: Server["id"], title: string): Component[]
 export function dueFor(sub: Sub, now: number): Due[] {
   const out: Due[] = [];
   const srv = sub.server;
+  const lang = sub.lang ?? "en";
+  const card = (e: TimedEntry, key: Key) => entryCard(e, srv, t(lang, key), lang);
   for (const e of data.timeline) {
     const sp = span(e, srv);
     if (!sp) continue;
     const fresh = (t: number) => t <= now && t > now - LOOKBACK;
     if (e.kind === "banner" && sub.banners) {
-      if (fresh(sp.start)) out.push({ key: `b:${e.name}:start`, at: sp.start, components: entryCard(e, srv, "New banner") });
-      if (e.rateUp && fresh(sp.end - 86400)) out.push({ key: `b:${e.name}:last`, at: sp.end - 86400, components: entryCard(e, srv, "Last day of banner") });
+      if (fresh(sp.start)) out.push({ key: `b:${e.name}:start`, at: sp.start, components: card(e, "nt_new_banner") });
+      if (e.rateUp && fresh(sp.end - 86400)) out.push({ key: `b:${e.name}:last`, at: sp.end - 86400, components: card(e, "nt_last_day") });
     }
     if (e.kind === "event" && sub.events && fresh(sp.start)) {
-      out.push({ key: `e:${e.name}:start`, at: sp.start, components: entryCard(e, srv, "New event") });
+      out.push({ key: `e:${e.name}:start`, at: sp.start, components: card(e, "nt_new_event") });
     }
     if (e.kind === "version" && (sub.events || sub.banners) && fresh(sp.start)) {
-      out.push({ key: `v:${e.name}`, at: sp.start, components: entryCard(e, srv, "New version") });
+      out.push({ key: `v:${e.name}`, at: sp.start, components: card(e, "nt_new_version") });
     }
   }
   if (sub.resets) {
@@ -92,7 +96,7 @@ export function dueFor(sub: Sub, now: number): Due[] {
       out.push({
         key: `r:${reset}`,
         at: remindAt,
-        components: [container(BRAND_COLOR, [text(`### Daily reset ${ts(reset, "R")}\nFinish your dailies on **${server(srv).name}**.`)])],
+        components: [container(BRAND_COLOR, [text(`### ${t(lang, "nt_reset_title", { when: ts(reset, "R") })}\n${t(lang, "nt_reset_body", { server: t(lang, srv === "ASIA" ? "server_asia" : "server_ameu") })}`)])],
       });
     }
   }

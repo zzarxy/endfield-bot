@@ -1,0 +1,23 @@
+// Keeps Discord's slash commands in sync with src/commands.ts without a manual step:
+// the cron job compares a hash of the definitions with the one stored in D1 and re-registers on change.
+import { COMMANDS } from "./commands.ts";
+import { discord } from "./lib/discord.ts";
+import type { Env } from "./notify.ts";
+
+async function sha256(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export async function syncCommands(env: Env): Promise<string> {
+  const body = JSON.stringify(COMMANDS);
+  const hash = await sha256(body);
+  const stored = await env.DB.prepare("SELECT value FROM meta WHERE key = 'commands_hash'").first<{ value: string }>();
+  if (stored?.value === hash) return "unchanged";
+  const res = await discord(env.DISCORD_TOKEN, "PUT", `/applications/${env.DISCORD_APP_ID}/commands`, COMMANDS);
+  if (!res.ok) return `failed ${res.status}: ${(await res.text()).slice(0, 300)}`;
+  await env.DB.prepare("INSERT INTO meta (key, value) VALUES ('commands_hash', ?1) ON CONFLICT(key) DO UPDATE SET value = ?1")
+    .bind(hash)
+    .run();
+  return "registered";
+}

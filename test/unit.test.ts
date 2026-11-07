@@ -84,7 +84,7 @@ describe("time", () => {
 });
 
 describe("search", () => {
-  const list = [{ name: "Arclight", ru: "Арклайт" }, { name: "Ardelia" }, { name: "Chen Qianyu" }];
+  const list = [{ name: "Arclight", names: { ru: "Арклайт" } }, { name: "Ardelia" }, { name: "Chen Qianyu" }];
   it("prefix, word and typo matches", () => {
     expect(search(list, "ar").map((x) => x.name).sort()).toEqual(["Arclight", "Ardelia"]);
     expect(search(list, "qian")[0].name).toBe("Chen Qianyu");
@@ -121,7 +121,7 @@ describe("notifications", async () => {
   const { dueFor } = await import("../src/notify.ts");
   const { data } = await import("../src/data/index.ts");
   const banner = data.timeline.find((e) => e.kind === "banner" && e.ameu && e.rateUp)!;
-  const sub = { id: 1, guild_id: "g", channel_id: "c", server: "AMEU" as const, role_id: null, banners: 1, events: 0, resets: 0, failures: 0 };
+  const sub = { id: 1, guild_id: "g", channel_id: "c", server: "AMEU" as const, lang: "en" as const, role_id: null, banners: 1, events: 0, resets: 0, failures: 0 };
   it("announces a banner shortly after it starts, once per key", () => {
     const due = dueFor(sub, banner.ameu!.start + 600);
     expect(due.map((d) => d.key)).toContain(`b:${banner.name}:start`);
@@ -130,5 +130,77 @@ describe("notifications", async () => {
   });
   it("respects disabled kinds", () => {
     expect(dueFor({ ...sub, banners: 0 }, banner.ameu!.start + 600).some((d) => d.key.startsWith("b:"))).toBe(false);
+  });
+});
+
+describe("i18n", async () => {
+  const { localeToLang, LANGS, STR, DISCORD_LOCALES, t } = await import("../src/i18n.ts");
+  const { COMMANDS } = await import("../src/commands.ts");
+  const { data, localName } = await import("../src/data/index.ts");
+  const { dueFor } = await import("../src/notify.ts");
+  const { choices } = await import("../src/lib/search.ts");
+
+  it("maps Discord locales to supported languages", () => {
+    expect(localeToLang("en-US")).toBe("en");
+    expect(localeToLang("en-GB")).toBe("en");
+    expect(localeToLang("ru")).toBe("ru");
+    expect(localeToLang("uk")).toBe("uk");
+    expect(localeToLang("es-ES")).toBe("es");
+    expect(localeToLang("es-419")).toBe("es");
+    expect(localeToLang("ja")).toBe("ja");
+    expect(localeToLang("ko")).toBe("ko");
+    expect(localeToLang("zh-CN")).toBe("zh");
+    expect(localeToLang("zh-TW")).toBe("tc");
+    expect(localeToLang("de")).toBe("en");
+    expect(localeToLang(undefined)).toBe("en");
+  });
+
+  it("every dictionary is complete and keeps the same placeholders", () => {
+    const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(",");
+    for (const lang of LANGS) {
+      for (const [key, en] of Object.entries(STR.en)) {
+        const v = (STR[lang] as Record<string, string>)[key];
+        expect(v, `${lang}.${key}`).toBeTruthy();
+        expect(placeholders(v), `${lang}.${key} placeholders`).toBe(placeholders(en));
+      }
+    }
+  });
+
+  it("slash command texts fit Discord limits and use valid locale codes", () => {
+    const valid = new Set(Object.values(DISCORD_LOCALES).flat());
+    const visit = (c: any) => {
+      expect(c.name.length).toBeLessThanOrEqual(32);
+      expect(c.description.length, c.name).toBeLessThanOrEqual(100);
+      for (const [code, text] of Object.entries(c.description_localizations ?? {})) {
+        expect(valid.has(code), `${c.name} ${code}`).toBe(true);
+        expect((text as string).length, `${c.name} ${code}`).toBeLessThanOrEqual(100);
+      }
+      (c.options ?? []).forEach(visit);
+    };
+    COMMANDS.forEach(visit);
+  });
+
+  it("wiki gives localized names for the six wiki languages", () => {
+    const langs = ["ru", "es", "ja", "ko", "zh", "tc"] as const;
+    // some operators keep their English name in Spanish, so pick one that differs in every language
+    const op = data.operators.find((o) => langs.every((l) => o.names?.[l]))!;
+    expect(op).toBeTruthy();
+    for (const lang of langs) {
+      const local = op.names![lang]!;
+      // typing the local name finds the operator and shows it next to the English one
+      const hit = choices(data.operators, local, lang)[0];
+      expect(hit.value).toBe(op.name);
+      expect(hit.name).toBe(`${op.name} · ${local}`);
+      expect(localName(op.name, lang)).toBe(local);
+    }
+    expect(localName(op.name, "en")).toBe(op.name);
+    expect(localName(op.name, "uk")).toBe(op.name); // no Ukrainian names on the wiki
+  });
+
+  it("notifications are written in the subscription language", () => {
+    const banner = data.timeline.find((e) => e.kind === "banner" && e.ameu && e.rateUp)!;
+    const sub = { id: 1, guild_id: "g", channel_id: "c", server: "AMEU" as const, lang: "ja" as const, role_id: null, banners: 1, events: 0, resets: 0, failures: 0 };
+    const due = dueFor(sub, banner.ameu!.start + 600).find((d) => d.key === `b:${banner.name}:start`)!;
+    expect(JSON.stringify(due.components)).toContain(t("ja", "nt_new_banner"));
   });
 });

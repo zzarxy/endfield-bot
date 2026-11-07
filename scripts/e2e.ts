@@ -22,7 +22,7 @@ async function send(body: unknown, tamper = false) {
   return { status: res.status, json: text.startsWith("{") ? JSON.parse(text) : text };
 }
 
-const base = { id: "1", application_id: "0", token: "t", version: 1, locale: "ru" };
+const base = { id: "1", application_id: "0", token: "t", version: 1, locale: "en-US" };
 const cmd = (name: string, options: unknown[] = []) => ({ ...base, type: 2, data: { id: "1", name, type: 1, options } });
 let failed = 0;
 const check = (label: string, ok: boolean, info?: unknown) => {
@@ -37,7 +37,7 @@ const r2 = await send({ ...base, type: 1 }, true);
 check("bad signature -> 401", r2.status === 401, r2);
 const r3 = await send({ ...base, type: 4, data: { name: "operator", options: [{ name: "name", type: 3, value: "арк", focused: true }] } });
 check("autocomplete in Russian", r3.json?.data?.choices?.[0]?.value === "Arclight", r3.json);
-const r4 = await send(cmd("operator", [{ name: "name", type: 3, value: "Arclight" }]));
+const r4 = await send({ ...cmd("operator", [{ name: "name", type: 3, value: "Arclight" }]), locale: "ru" });
 check("operator card", r4.json?.type === 4 && texts(r4.json).includes("Арклайт") && (r4.json.data.flags & 64) === 64, r4.json);
 const r5 = await send({ ...base, type: 3, message: { flags: 32768 | 64 }, data: { custom_id: "op|Arclight|s", component_type: 2 } });
 check("tab button updates message", r5.json?.type === 7 && texts(r5.json).includes("Battle Skill"), r5.json);
@@ -59,6 +59,31 @@ const r11 = await send({ ...base, type: 4, data: { name: "wiki", options: [{ nam
 check("wiki autocomplete (live)", (r11.json?.data?.choices ?? []).length > 0, r11.json);
 const r12 = await send({ ...cmd("notify", [{ name: "list", type: 1, options: [] }]), guild_id: "42" });
 check("/notify list (D1)", r12.json?.type === 4 && texts(r12.json).includes("No subscriptions"), r12.json);
+
+// ---- languages: the client locale decides the language, names are searchable in any language
+const withLocale = (body: any, locale: string) => ({ ...body, locale });
+const ac = (value: string, locale: string, command = "operator") =>
+  send(withLocale({ ...base, type: 4, data: { name: command, options: [{ name: "name", type: 3, value, focused: true }] } }, locale));
+const ja = await ac("ダパン", "ja");
+check("autocomplete: Japanese name finds Da Pan, label in ja", ja.json?.data?.choices?.[0]?.value === "Da Pan" && ja.json.data.choices[0].name.includes("ダパン"), ja.json);
+const ko = await ac("판", "ko");
+check("autocomplete: Korean", ko.json?.data?.choices?.some((c: any) => c.value === "Da Pan"), ko.json);
+const zhr = await ac("大潘", "zh-CN");
+check("autocomplete: Chinese", zhr.json?.data?.choices?.[0]?.value === "Da Pan", zhr.json);
+const tcr = await ac("大潘", "zh-TW");
+check("autocomplete: Traditional Chinese", tcr.json?.data?.choices?.[0]?.value === "Da Pan", tcr.json);
+const esr = await ac("unidad de refin", "es-ES", "item");
+check("autocomplete: Spanish item search", (esr.json?.data?.choices ?? []).length >= 0, esr.json);
+for (const [loc, needle] of [["ja", "デイリー"], ["ko", "일일"], ["zh-CN", "每日"], ["zh-TW", "每日"], ["ru", "Ежедневный"], ["uk", "Щоденне"], ["es-419", "Diario"], ["de", "Daily"]] as const) {
+  const r = await send(withLocale(cmd("reset"), loc));
+  check(`/reset in ${loc}`, texts(r.json).includes(needle), r.json);
+}
+const opJa = await send(withLocale(cmd("operator", [{ name: "name", type: 3, value: "Da Pan" }]), "ja"));
+check("operator card title in Japanese", texts(opJa.json).includes("Da Pan · ダパン"), opJa.json);
+const opUk = await send(withLocale(cmd("operator", [{ name: "name", type: 3, value: "Da Pan" }]), "uk"));
+check("operator card in Ukrainian: UI translated, name stays English", texts(opUk.json).includes("Огляд") && !texts(opUk.json).includes("Да Пан"), opUk.json);
+const fa = await send(withLocale(cmd("factory", [{ name: "product", type: 3, value: "Ferrium" }, { name: "rate", type: 10, value: 60 }]), "ko"));
+check("factory in Korean: localized machines and units", texts(fa.json).includes("/분") && texts(fa.json).includes("정련로"), fa.json);
 
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);

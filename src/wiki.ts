@@ -1,6 +1,7 @@
 // Live wiki search for /wiki (CirrusSearch + page descriptions).
 import { BRAND_COLOR, button, clip, container, footer, linkButton, row, separator, text, wikiUrl, type Component } from "./lib/ui.ts";
 import { ButtonStyle } from "discord-api-types/v10";
+import { t, type Lang } from "./i18n.ts";
 import { data } from "./data/index.ts";
 
 const API = "https://endfield.wiki.gg/api.php";
@@ -23,7 +24,7 @@ export async function suggest(query: string): Promise<string[]> {
   return (json[1] as string[]) ?? [];
 }
 
-export async function wikiCard(query: string, shared: boolean): Promise<{ components: Component[] }> {
+export async function wikiCard(query: string, shared: boolean, lang: Lang): Promise<{ components: Component[] }> {
   const json = await api({
     action: "query",
     generator: "search",
@@ -35,7 +36,7 @@ export async function wikiCard(query: string, shared: boolean): Promise<{ compon
   const pages = ((json.query?.pages ?? []) as any[]).sort((a, b) => a.index - b.index);
   if (!pages.length) {
     return {
-      components: [container(0xed4245, [text(`No wiki pages found for **${query}**.`), row(linkButton("Search on wiki", `https://endfield.wiki.gg/index.php?search=${encodeURIComponent(query)}`))])],
+      components: [container(0xed4245, [text(t(lang, "wiki_none", { q: query })), row(linkButton(t(lang, "wiki_search"), `https://endfield.wiki.gg/index.php?search=${encodeURIComponent(query)}`))])],
     };
   }
   const [top, ...rest] = pages;
@@ -43,11 +44,11 @@ export async function wikiCard(query: string, shared: boolean): Promise<{ compon
     text(`## ${top.title}\n${clip(top.pageprops?.description ?? "", 1500)}`),
   ];
   if (rest.length) {
-    inner.push(separator(), text("**Also:** " + rest.map((p) => `[${p.title}](${wikiUrl(p.title)})`).join(" · ")));
+    inner.push(separator(), text(t(lang, "wiki_also") + " " + rest.map((p) => `[${p.title}](${wikiUrl(p.title)})`).join(" · ")));
   }
-  inner.push(separator(), footer(data.syncedAt));
-  const actions = [linkButton("Open page", wikiUrl(top.title))];
-  if (!shared) actions.push(button("Show everyone", `pub|wk|${top.title}`.slice(0, 100), { style: ButtonStyle.Success }));
+  inner.push(separator(), footer(data.syncedAt, lang));
+  const actions = [linkButton(t(lang, "wiki_open"), wikiUrl(top.title))];
+  if (!shared) actions.push(button(t(lang, "show_everyone"), `pub|wk|${top.title}`.slice(0, 100), { style: ButtonStyle.Success }));
   inner.push(row(...actions));
   return { components: [container(BRAND_COLOR, inner)] };
 }

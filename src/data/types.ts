@@ -1,5 +1,10 @@
 // Shapes of the JSON produced by pipeline/sync.ts and bundled into the worker.
 
+import type { Lang } from "../i18n.ts";
+
+/** Localized names from the wiki (Locales table); English is the entity's own `name`. */
+export type Names = Partial<Record<Lang, string>>;
+
 export interface Mat { item: string; count: number }
 
 export interface SkillStat { name: string; lv1: string; max: string }
@@ -9,7 +14,7 @@ export interface Potential { n: number; title: string; desc: string }
 
 export interface Operator {
   name: string;
-  ru?: string;
+  names?: Names;
   rarity: number;
   class: string;
   weapon: string;
@@ -35,7 +40,7 @@ export interface Operator {
 
 export interface Weapon {
   name: string;
-  ru?: string;
+  names?: Names;
   rarity: number;
   type: string;
   source: string;
@@ -49,7 +54,7 @@ export interface Weapon {
 
 export interface Gear {
   name: string;
-  ru?: string;
+  names?: Names;
   rarity: number;
   type: string;
   level: number;
@@ -60,11 +65,11 @@ export interface Gear {
   icon?: string;
 }
 
-export interface GearSet { name: string; ru?: string; level: number; effect: string; pieces: string[]; icon?: string }
+export interface GearSet { name: string; names?: Names; level: number; effect: string; pieces: string[]; icon?: string }
 
 export interface Item {
   name: string;
-  ru?: string;
+  names?: Names;
   rarity: number;
   type: string;
   use: string;
@@ -72,7 +77,7 @@ export interface Item {
   icon?: string;
 }
 
-export interface Enemy { name: string; ru?: string; type: string; class: string; summary: string; image?: string }
+export interface Enemy { name: string; names?: Names; type: string; class: string; summary: string; image?: string }
 
 export interface Recipe {
   facility: string; // machine name, or "Crafting" for manual crafting
@@ -82,7 +87,7 @@ export interface Recipe {
   products: Mat[];
 }
 
-export interface Facility { name: string; power?: number; icon?: string }
+export interface Facility { name: string; names?: Names; power?: number; icon?: string }
 
 export interface TimedEntry {
   name: string;

@@ -1,53 +1,69 @@
-// Slash command definitions (registered by scripts/register.ts).
+// Slash command definitions with localized descriptions. Registered by the worker itself (src/register.ts)
+// whenever this definition changes, or manually with scripts/register.ts.
 import { ApplicationCommandOptionType as O, ChannelType } from "discord-api-types/v10";
+import { DISCORD_LOCALES, LANGS, LANG_LABEL, STR, type Key, type Lang } from "./i18n.ts";
 
 // 0 = guild install, 1 = user install; contexts 0 = guild, 1 = bot DM, 2 = private channels
 const everywhere = { integration_types: [0, 1], contexts: [0, 1, 2] };
-const lookup = (name: string, description: string, optDesc: string) => ({
+
+/** English description plus translations under every Discord locale code we support. */
+function d(key: Key) {
+  const localizations: Record<string, string> = {};
+  for (const lang of LANGS) {
+    if (lang === "en") continue;
+    for (const code of DISCORD_LOCALES[lang]) localizations[code] = STR[lang][key];
+  }
+  return { description: STR.en[key], description_localizations: localizations };
+}
+
+const lookup = (name: string, descKey: Key, optKey: Key) => ({
   name,
-  description,
+  ...d(descKey),
   ...everywhere,
-  options: [{ type: O.String, name: "name", description: optDesc, required: true, autocomplete: true }],
+  options: [{ type: O.String, name: "name", ...d(optKey), required: true, autocomplete: true }],
 });
+
 const serverOpt = {
   type: O.String,
   name: "server",
-  description: "Game server (default Americas / Europe)",
+  ...d("o_server"),
   choices: [
     { name: "Americas / Europe", value: "AMEU" },
     { name: "Asia", value: "ASIA" },
   ],
 };
 
+export const LANG_CHOICES = (LANGS as Lang[]).map((l) => ({ name: LANG_LABEL[l], value: l }));
+
 export const COMMANDS = [
-  lookup("operator", "Operator card: kit, skills, talents, materials", "Operator name"),
-  lookup("weapon", "Weapon stats, skills and ascension materials", "Weapon name"),
-  lookup("gear", "Gear piece or gear set", "Gear or set name"),
-  lookup("item", "Item description, where it is made and used", "Item name"),
-  lookup("enemy", "Enemy info", "Enemy name"),
-  lookup("recipe", "Recipes that produce an item", "Item name"),
+  lookup("operator", "c_operator", "o_operator"),
+  lookup("weapon", "c_weapon", "o_weapon"),
+  lookup("gear", "c_gear", "o_gear"),
+  lookup("item", "c_item", "o_item"),
+  lookup("enemy", "c_enemy", "o_enemy"),
+  lookup("recipe", "c_recipe", "o_item"),
   {
     name: "factory",
-    description: "AIC production chain: machines and raw input for a target rate",
+    ...d("c_factory"),
     ...everywhere,
     options: [
-      { type: O.String, name: "product", description: "What to produce", required: true, autocomplete: true },
-      { type: O.Number, name: "rate", description: "Items per minute (default 30)", min_value: 0.1, max_value: 10000 },
+      { type: O.String, name: "product", ...d("o_product"), required: true, autocomplete: true },
+      { type: O.Number, name: "rate", ...d("o_rate"), min_value: 0.1, max_value: 10000 },
     ],
   },
-  { name: "banner", description: "Current and upcoming headhunting banners", ...everywhere, options: [serverOpt] },
-  { name: "events", description: "Active and upcoming events", ...everywhere, options: [serverOpt] },
-  { name: "reset", description: "Next daily and weekly reset for each server", ...everywhere },
+  { name: "banner", ...d("c_banner"), ...everywhere, options: [serverOpt] },
+  { name: "events", ...d("c_events"), ...everywhere, options: [serverOpt] },
+  { name: "reset", ...d("c_reset"), ...everywhere },
   {
     name: "wiki",
-    description: "Search the Endfield wiki (lore, quests, regions…)",
+    ...d("c_wiki"),
     ...everywhere,
-    options: [{ type: O.String, name: "query", description: "Search text", required: true, autocomplete: true }],
+    options: [{ type: O.String, name: "query", ...d("o_query"), required: true, autocomplete: true }],
   },
-  { name: "help", description: "What this bot can do", ...everywhere },
+  { name: "help", ...d("c_help"), ...everywhere },
   {
     name: "notify",
-    description: "Post banners, events and resets to a channel",
+    ...d("c_notify"),
     integration_types: [0],
     contexts: [0],
     default_member_permissions: String(1 << 5), // Manage Server
@@ -55,23 +71,24 @@ export const COMMANDS = [
       {
         type: O.Subcommand,
         name: "subscribe",
-        description: "Subscribe a channel to notifications",
+        ...d("c_notify_subscribe"),
         options: [
-          { type: O.Channel, name: "channel", description: "Where to post", required: true, channel_types: [ChannelType.GuildText, ChannelType.GuildAnnouncement] },
+          { type: O.Channel, name: "channel", ...d("o_channel"), required: true, channel_types: [ChannelType.GuildText, ChannelType.GuildAnnouncement] },
           { ...serverOpt, required: true },
-          { type: O.Role, name: "role", description: "Role to ping (optional)" },
-          { type: O.Boolean, name: "banners", description: "New banners and last-day reminders (default on)" },
-          { type: O.Boolean, name: "events", description: "New events (default on)" },
-          { type: O.Boolean, name: "resets", description: "Daily reset reminder (default off)" },
+          { type: O.Role, name: "role", ...d("o_role") },
+          { type: O.String, name: "language", ...d("o_language"), choices: LANG_CHOICES },
+          { type: O.Boolean, name: "banners", ...d("o_banners") },
+          { type: O.Boolean, name: "events", ...d("o_events") },
+          { type: O.Boolean, name: "resets", ...d("o_resets") },
         ],
       },
       {
         type: O.Subcommand,
         name: "unsubscribe",
-        description: "Stop notifications in a channel",
-        options: [{ type: O.Channel, name: "channel", description: "Channel", required: true }],
+        ...d("c_notify_unsubscribe"),
+        options: [{ type: O.Channel, name: "channel", ...d("o_channel_any"), required: true }],
       },
-      { type: O.Subcommand, name: "list", description: "Show this server's subscriptions" },
+      { type: O.Subcommand, name: "list", ...d("c_notify_list") },
     ],
   },
 ];

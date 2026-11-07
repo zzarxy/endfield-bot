@@ -1,4 +1,5 @@
 // Components V2 builders. Everything the bot shows is a single Container with an accent colour.
+import { t, type Lang } from "../i18n.ts";
 import { ComponentType, ButtonStyle, MessageFlags, SeparatorSpacingSize } from "discord-api-types/v10";
 
 export const FLAG_V2 = MessageFlags.IsComponentsV2;
@@ -71,8 +72,7 @@ export function container(accent: number, components: Component[]): Component {
   return { type: ComponentType.Container, accent_color: accent, components };
 }
 
-export const footer = (syncedAt: string) =>
-  text(`-# Data: [Endfield Talos Wiki](https://endfield.wiki.gg) (CC BY-SA 4.0) · synced ${syncedAt.slice(0, 10)}`);
+export const footer = (syncedAt: string, lang: Lang) => text(t(lang, "footer", { date: syncedAt.slice(0, 10) }));
 
 /** Cut text to a budget on a line boundary. */
 export function clip(s: string, max: number): string {
@@ -82,7 +82,7 @@ export function clip(s: string, max: number): string {
   return (nl > max * 0.6 ? cut.slice(0, nl) : cut.slice(0, max - 1)) + "…";
 }
 
-export const fmtMats = (mats: { item: string; count: number }[]) =>
-  mats.map((m) => `${m.item} ×${m.count.toLocaleString("en-US")}`).join(", ");
+export const fmtMats = (mats: { item: string; count: number }[], nameOf: (n: string) => string = (n) => n) =>
+  mats.map((m) => `${nameOf(m.item)} ×${m.count.toLocaleString("en-US")}`).join(", ");
 
 export const ts = (unix: number, style: "R" | "f" | "F" | "t" | "d" = "f") => `<t:${unix}:${style}>`;

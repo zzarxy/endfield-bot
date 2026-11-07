@@ -141,17 +141,25 @@ export class Factory {
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(n < 10 ? 2 : 1).replace(/\.?0+$/, ""));
 
 /** Tree as monospace text. */
-export function renderTree(node: ChainNode, prefix = "", last = true, top = true): string {
+export function renderTree(
+  node: ChainNode,
+  nameOf: (n: string) => string = (n) => n,
+  perMin = "/min",
+  prefix = "",
+  last = true,
+  top = true,
+): string {
   const branch = top ? "" : last ? "└─ " : "├─ ";
+  const item = nameOf(node.item);
   const what = node.loop
-    ? `${node.item} ${fmt(node.rate)}/min ↺ (fed back from above)`
+    ? `${item} ${fmt(node.rate)}${perMin} ↺`
     : node.recipe
-      ? `${node.item} ${fmt(node.rate)}/min ← ${node.recipe.facility} ×${fmt(node.machines)}`
-      : `${node.item} ${fmt(node.rate)}/min (raw)`;
+      ? `${item} ${fmt(node.rate)}${perMin} ← ${nameOf(node.recipe.facility)} ×${fmt(node.machines)}`
+      : `${item} ${fmt(node.rate)}${perMin} ●`;
   let out = `${prefix}${branch}${what}\n`;
   const childPrefix = top ? "" : prefix + (last ? "   " : "│  ");
   node.inputs.forEach((c, i) => {
-    out += renderTree(c, childPrefix, i === node.inputs.length - 1, false);
+    out += renderTree(c, nameOf, perMin, childPrefix, i === node.inputs.length - 1, false);
   });
   return out;
 }

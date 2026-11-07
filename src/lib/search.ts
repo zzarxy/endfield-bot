@@ -1,12 +1,13 @@
-// Forgiving name search for autocomplete and lookups (English + Russian names).
+// Forgiving name search for autocomplete and lookups (English plus every localized name).
+import type { Lang } from "../i18n.ts";
 
-export interface Searchable { name: string; ru?: string }
+export interface Searchable { name: string; names?: Partial<Record<Lang, string>> }
 
 const norm = (s: string) =>
   s
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
 
@@ -29,11 +30,14 @@ function score(query: string, candidate: string): number {
   return Infinity;
 }
 
+const bestScore = (q: string, item: Searchable) =>
+  Math.min(score(q, item.name), ...Object.values(item.names ?? {}).map((n) => score(q, n)));
+
 export function search<T extends Searchable>(list: T[], query: string, limit = 25): T[] {
   const q = norm(query);
   if (!q) return list.slice(0, limit);
   return list
-    .map((item) => ({ item, s: Math.min(score(q, item.name), item.ru ? score(q, item.ru) : Infinity) }))
+    .map((item) => ({ item, s: bestScore(q, item) }))
     .filter((x) => x.s < Infinity)
     .sort((a, b) => a.s - b.s || a.item.name.localeCompare(b.item.name))
     .slice(0, limit)
@@ -42,12 +46,20 @@ export function search<T extends Searchable>(list: T[], query: string, limit = 2
 
 export function findExact<T extends Searchable>(list: T[], name: string): T | undefined {
   const q = norm(name);
-  return list.find((x) => norm(x.name) === q) ?? list.find((x) => x.ru && norm(x.ru) === q) ?? search(list, name, 1)[0];
+  return (
+    list.find((x) => norm(x.name) === q) ??
+    list.find((x) => Object.values(x.names ?? {}).some((n) => norm(n) === q)) ??
+    search(list, name, 1)[0]
+  );
 }
 
-export function choices(list: Searchable[], query: string, ru: boolean) {
-  return search(list, query).map((x) => ({
-    name: (ru && x.ru && x.ru !== x.name ? `${x.name} · ${x.ru}` : x.name).slice(0, 100),
-    value: x.name.slice(0, 100),
-  }));
+/** Autocomplete choices: the value is always the English name, the label adds the user's language. */
+export function choices(list: Searchable[], query: string, lang: Lang) {
+  return search(list, query).map((x) => {
+    const local = lang === "en" ? undefined : x.names?.[lang];
+    return {
+      name: (local && local !== x.name ? `${x.name} · ${local}` : x.name).slice(0, 100),
+      value: x.name.slice(0, 100),
+    };
+  });
 }

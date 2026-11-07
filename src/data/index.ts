@@ -7,17 +7,19 @@ import { Factory } from "../lib/factory.ts";
 
 export const data = raw as unknown as Dataset;
 
+export const itemByName = new Map(data.items.map((i) => [i.name, i]));
+
 export const factory = new Factory(data.recipes, data.facilities, (overrides as any).preferredRecipe ?? {});
 
 /** Items that some AIC machine can produce, as searchable entries. */
 export const producible = factory
   .items()
-  .map((name) => ({ name, names: data.items.find((i) => i.name === name)?.names }))
+  .map((name) => ({ name, names: itemByName.get(name)?.names, keys: itemByName.get(name)?.keys }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
 export const allRecipeItems = [
   ...new Set(data.recipes.flatMap((r) => r.products.map((p) => p.item))),
-].map((name) => ({ name, names: data.items.find((i) => i.name === name)?.names }));
+].map((name) => ({ name, names: itemByName.get(name)?.names, keys: itemByName.get(name)?.keys }));
 
 export const server = (id: string): Server => data.servers.find((s) => s.id === id) ?? data.servers[0];
 
@@ -32,8 +34,6 @@ export function timeline(kind: TimedEntry["kind"], srv: Server["id"], now: numbe
   const by = (k: "start" | "end") => (a: TimedEntry, b: TimedEntry) => span(a, srv)![k] - span(b, srv)![k];
   return { active: active.sort(by("end")), upcoming: upcoming.sort(by("start")) };
 }
-
-export const itemByName = new Map(data.items.map((i) => [i.name, i]));
 
 // One lookup for every entity kind, so lists of materials/machines can be shown in the user's language
 const allNames = new Map<string, Names | undefined>();

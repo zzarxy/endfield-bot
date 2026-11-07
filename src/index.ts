@@ -24,10 +24,12 @@ const notice = (s: string, extra: Component[] = []) => message([container(BRAND_
 
 const opt = (options: any[] | undefined, name: string) => options?.find((o) => o.name === name)?.value;
 
+const GEAR_AND_SETS = [...data.sets, ...data.gear];
+
 const AUTOCOMPLETE_SOURCES: Record<string, () => { name: string; names?: Partial<Record<Lang, string>> }[]> = {
   operator: () => data.operators,
   weapon: () => data.weapons,
-  gear: () => [...data.sets, ...data.gear],
+  gear: () => GEAR_AND_SETS,
   item: () => data.items,
   enemy: () => data.enemies,
   recipe: () => allRecipeItems,

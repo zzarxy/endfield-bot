@@ -4,6 +4,7 @@ import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { cargo, raw, wikitexts, descriptions, modules } from "./wiki.ts";
 import { templates, clean, materials, lead, type Params } from "./wikitext.ts";
 import { parseLuaData } from "./lua.ts";
+import { norm } from "../src/lib/norm.ts";
 import { WIKI_LANG, type Lang } from "../src/i18n.ts";
 import type {
   Names, Dataset, Operator, Weapon, Gear, GearSet, Item, Enemy, Recipe, Facility, TimedEntry, Server, Mat,
@@ -336,9 +337,12 @@ async function main() {
   }
   log("timeline", timeline.length);
 
+  const withKeys = <T extends { name: string; names?: Names }>(list: T[]): T[] =>
+    list.map((e) => ({ ...e, keys: [...new Set([norm(e.name), ...Object.values(e.names ?? {}).map(norm)].filter(Boolean))] }));
   const dataset: Dataset = {
     syncedAt: new Date().toISOString(),
-    operators, weapons, gear, sets, items, enemies, recipes, facilities, timeline, servers,
+    operators: withKeys(operators), weapons: withKeys(weapons), gear: withKeys(gear), sets: withKeys(sets),
+    items: withKeys(items), enemies: withKeys(enemies), recipes, facilities, timeline, servers,
   };
   mkdirSync("data", { recursive: true });
   // keep the old timestamp when nothing changed, so the nightly job only redeploys on real changes

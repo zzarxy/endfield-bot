@@ -2,14 +2,14 @@
 import { sign, createPrivateKey } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const URL = process.env.BOT_URL ?? "http://127.0.0.1:8787/";
+const BOT_URL = process.env.BOT_URL ?? "http://127.0.0.1:8787/";
 const key = createPrivateKey(readFileSync(".dev-key.pem"));
 
 async function send(body: unknown, tamper = false) {
   const raw = JSON.stringify(body);
   const timestamp = String(Math.floor(Date.now() / 1000));
   const sig = sign(null, Buffer.from(timestamp + raw), key).toString("hex");
-  const res = await fetch(URL, {
+  const res = await fetch(BOT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -95,7 +95,7 @@ check("/privacy-delete with nothing stored", texts(pd1.json).includes("stores no
 const pdAdmin = await send({ ...cmd("privacy-delete"), guild_id: "42", member: { permissions: "8" }, locale: "ru" });
 check("/privacy-delete works for Administrator, in Russian", texts(pdAdmin.json).includes("не хранит"), pdAdmin.json);
 for (const path of ["privacy", "terms"]) {
-  const res = await fetch(new globalThis.URL(path, URL));
+  const res = await fetch(new URL(path, BOT_URL));
   const html = await res.text();
   check(`/${path} page`, res.status === 200 && (res.headers.get("content-type") ?? "").includes("text/html") && html.includes("Endfield Helper"), html.slice(0, 200));
 }

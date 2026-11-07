@@ -15,6 +15,7 @@ export interface Potential { n: number; title: string; desc: string }
 export interface Operator {
   name: string;
   names?: Names;
+  keys?: string[]; // normalized English + localized names, precomputed by the sync for fast search
   rarity: number;
   class: string;
   weapon: string;
@@ -41,6 +42,7 @@ export interface Operator {
 export interface Weapon {
   name: string;
   names?: Names;
+  keys?: string[]; // normalized English + localized names, precomputed by the sync for fast search
   rarity: number;
   type: string;
   source: string;
@@ -55,6 +57,7 @@ export interface Weapon {
 export interface Gear {
   name: string;
   names?: Names;
+  keys?: string[]; // normalized English + localized names, precomputed by the sync for fast search
   rarity: number;
   type: string;
   level: number;
@@ -65,11 +68,12 @@ export interface Gear {
   icon?: string;
 }
 
-export interface GearSet { name: string; names?: Names; level: number; effect: string; pieces: string[]; icon?: string }
+export interface GearSet { name: string; names?: Names; keys?: string[]; level: number; effect: string; pieces: string[]; icon?: string }
 
 export interface Item {
   name: string;
   names?: Names;
+  keys?: string[]; // normalized English + localized names, precomputed by the sync for fast search
   rarity: number;
   type: string;
   use: string;
@@ -77,7 +81,7 @@ export interface Item {
   icon?: string;
 }
 
-export interface Enemy { name: string; names?: Names; type: string; class: string; summary: string; image?: string }
+export interface Enemy { name: string; names?: Names; keys?: string[]; type: string; class: string; summary: string; image?: string }
 
 export interface Recipe {
   facility: string; // machine name, or "Crafting" for manual crafting

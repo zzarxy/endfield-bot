@@ -6,7 +6,8 @@ import { wikiCard, suggest } from "./wiki.ts";
 import { choices } from "./lib/search.ts";
 import { data, producible, allRecipeItems } from "./data/index.ts";
 import { FLAG_EPHEMERAL, FLAG_V2, container, text, row, linkButton, BRAND_COLOR, type Component } from "./lib/ui.ts";
-import { subscribe, unsubscribe, list, runCron, dueFor, type Env, type Sub } from "./notify.ts";
+import { subscribe, unsubscribe, list, runCron, dueFor, deleteGuildData, type Env, type Sub } from "./notify.ts";
+import { legalPage } from "./legal.ts";
 import { discord } from "./lib/discord.ts";
 import { t, localeToLang, LANGS, type Lang } from "./i18n.ts";
 import { syncCommands } from "./register.ts";
@@ -97,9 +98,28 @@ async function deferWiki(env: Env, i: any, query: string, shared: boolean) {
   });
 }
 
+/** Discord only hides commands by default permission; server admins can override that, so check here too. */
+function canManage(i: any): boolean {
+  try {
+    const perms = BigInt(i.member?.permissions ?? 0);
+    return (perms & 0x20n) !== 0n || (perms & 0x8n) !== 0n; // Manage Server or Administrator
+  } catch {
+    return false;
+  }
+}
+
+async function handlePrivacyDelete(env: Env, i: any): Promise<Response> {
+  const lang = localeToLang(i.locale);
+  if (!i.guild_id) return notice(t(lang, "nt_only_server"));
+  if (!canManage(i)) return notice(t(lang, "no_perm"));
+  const n = await deleteGuildData(env, i.guild_id);
+  return notice(n ? t(lang, "pd_done", { n }) : t(lang, "pd_none"));
+}
+
 async function handleNotify(env: Env, i: any): Promise<Response> {
   const lang = localeToLang(i.locale);
   if (!i.guild_id) return notice(t(lang, "nt_only_server"));
+  if (!canManage(i)) return notice(t(lang, "no_perm"));
   const sub = i.data.options?.[0];
   const o = sub?.options;
   if (sub?.name === "list") {
@@ -182,6 +202,7 @@ async function handle(request: Request, env: Env, ectx: ExecutionContext): Promi
     case InteractionType.ApplicationCommand: {
       const name = i.data.name;
       if (name === "notify") return handleNotify(env, i);
+      if (name === "privacy-delete") return handlePrivacyDelete(env, i);
       if (name === "wiki") {
         ectx.waitUntil(deferWiki(env, i, String(opt(i.data.options, "query") ?? ""), false));
         return json({ type: InteractionResponseType.DeferredChannelMessageWithSource, data: { flags: FLAG_EPHEMERAL } });
@@ -243,6 +264,8 @@ async function handle(request: Request, env: Env, ectx: ExecutionContext): Promi
 export default {
   async fetch(request: Request, env: Env, ectx: ExecutionContext): Promise<Response> {
     if (request.method === "POST") return handle(request, env, ectx);
+    const page = legalPage(new URL(request.url).pathname);
+    if (page) return new Response(page, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
     return new Response(`Endfield bot · data ${data.syncedAt}`, { headers: { "Content-Type": "text/plain" } });
   },
   async scheduled(_event: ScheduledController, env: Env, ectx: ExecutionContext) {

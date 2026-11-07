@@ -45,6 +45,17 @@ export async function unsubscribe(env: Env, guildId: string, channelId: string) 
   return r.meta.changes > 0;
 }
 
+/** Removes every record the bot holds about a server (subscriptions and their send log). */
+export async function deleteGuildData(env: Env, guildId: string): Promise<number> {
+  const subs = await list(env, guildId);
+  if (!subs.length) return 0;
+  await env.DB.batch([
+    ...subs.map((x) => env.DB.prepare("DELETE FROM sent_log WHERE sub_id = ?").bind(x.id)),
+    env.DB.prepare("DELETE FROM subscriptions WHERE guild_id = ?").bind(guildId),
+  ]);
+  return subs.length;
+}
+
 export async function list(env: Env, guildId: string): Promise<Sub[]> {
   const r = await env.DB.prepare("SELECT * FROM subscriptions WHERE guild_id = ?").bind(guildId).all<Sub>();
   return r.results;

@@ -57,7 +57,7 @@ const r10 = await send(cmd("wiki", [{ name: "query", type: 3, value: "Talos-II" 
 check("/wiki defers", r10.json?.type === 5, r10.json);
 const r11 = await send({ ...base, type: 4, data: { name: "wiki", options: [{ name: "query", type: 3, value: "Talo", focused: true }] } });
 check("wiki autocomplete (live)", (r11.json?.data?.choices ?? []).length > 0, r11.json);
-const r12 = await send({ ...cmd("notify", [{ name: "list", type: 1, options: [] }]), guild_id: "42" });
+const r12 = await send({ ...cmd("notify", [{ name: "list", type: 1, options: [] }]), guild_id: "42", member: { permissions: "32" } });
 check("/notify list (D1)", r12.json?.type === 4 && texts(r12.json).includes("No subscriptions"), r12.json);
 
 // ---- languages: the client locale decides the language, names are searchable in any language
@@ -85,5 +85,19 @@ check("operator card in Ukrainian: UI translated, name stays English", texts(opU
 const fa = await send(withLocale(cmd("factory", [{ name: "product", type: 3, value: "Ferrium" }, { name: "rate", type: 10, value: 60 }]), "ko"));
 check("factory in Korean: localized machines and units", texts(fa.json).includes("/분") && texts(fa.json).includes("정련로"), fa.json);
 
+// ---- permissions, privacy-delete and legal pages
+const noPerm = await send({ ...cmd("notify", [{ name: "list", type: 1, options: [] }]), guild_id: "42", member: { permissions: "0" } });
+check("/notify refuses members without Manage Server", texts(noPerm.json).includes("Manage Server"), noPerm.json);
+const pd0 = await send({ ...cmd("privacy-delete"), guild_id: "42", member: { permissions: "0" } });
+check("/privacy-delete refuses members without Manage Server", texts(pd0.json).includes("Manage Server"), pd0.json);
+const pd1 = await send({ ...cmd("privacy-delete"), guild_id: "42", member: { permissions: "32" } });
+check("/privacy-delete with nothing stored", texts(pd1.json).includes("stores no data"), pd1.json);
+const pdAdmin = await send({ ...cmd("privacy-delete"), guild_id: "42", member: { permissions: "8" }, locale: "ru" });
+check("/privacy-delete works for Administrator, in Russian", texts(pdAdmin.json).includes("не хранит"), pdAdmin.json);
+for (const path of ["privacy", "terms"]) {
+  const res = await fetch(new globalThis.URL(path, URL));
+  const html = await res.text();
+  check(`/${path} page`, res.status === 200 && (res.headers.get("content-type") ?? "").includes("text/html") && html.includes("Endfield Helper"), html.slice(0, 200));
+}
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);

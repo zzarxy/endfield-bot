@@ -204,3 +204,13 @@ describe("i18n", async () => {
     expect(JSON.stringify(due.components)).toContain(t("ja", "nt_new_banner"));
   });
 });
+
+describe("legal pages", async () => {
+  const { legalPage } = await import("../src/legal.ts");
+  it("serves privacy and terms, nothing else", () => {
+    expect(legalPage("/privacy")).toContain("/privacy-delete");
+    expect(legalPage("/terms/")).toContain("not affiliated");
+    expect(legalPage("/")).toBeNull();
+    expect(legalPage("/other")).toBeNull();
+  });
+});

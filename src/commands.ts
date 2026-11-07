@@ -62,6 +62,13 @@ export const COMMANDS = [
   },
   { name: "help", ...d("c_help"), ...everywhere },
   {
+    name: "privacy-delete",
+    ...d("c_privacy_delete"),
+    integration_types: [0],
+    contexts: [0],
+    default_member_permissions: String(1 << 5), // Manage Server
+  },
+  {
     name: "notify",
     ...d("c_notify"),
     integration_types: [0],

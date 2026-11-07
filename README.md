@@ -25,6 +25,9 @@ The language follows each user's Discord client (`interaction.locale`); channel 
   review; corrections are welcome.
 - Slash commands are re-registered by the worker's cron whenever `src/commands.ts` or the translations change.
 
+## Support
+Support server: https://discord.gg/Pw3vZBRU7 (linked from `/help` and the policy pages; the link lives in `src/lib/links.ts`).
+
 ## Layout
 - `pipeline/` — `npm run sync` pulls Cargo tables, page wikitext and `Module:Recipe/*` into `data/dataset.json`
 - `data/overrides.json` — manual fixes: `power` (facility → power), `preferredRecipe` (item → facility)

@@ -3,6 +3,7 @@
 import { ButtonStyle } from "discord-api-types/v10";
 import { data, factory, span, timeline, itemByName, localName } from "./data/index.ts";
 import { t, type Lang, type Key } from "./i18n.ts";
+import { SUPPORT_URL } from "./lib/links.ts";
 import { findExact } from "./lib/search.ts";
 import { renderTree, fmtRate } from "./lib/factory.ts";
 import { nextDailyReset, nextWeeklyReset } from "./lib/time.ts";
@@ -287,7 +288,9 @@ function resetView(ctx: Ctx): Rendered {
 
 export function helpView(ctx: Ctx): Rendered {
   const s = (["help_1", "help_2", "help_3", "help_4", "help_5", "help_6", "help_7"] as const).map((k) => t(ctx.lang, k)).join("\n");
-  return frame(BRAND_COLOR, [text(`## ${t(ctx.lang, "help_title")}`), separator(), text(s)], stateId("hp"), ctx);
+  return frame(BRAND_COLOR, [text(`## ${t(ctx.lang, "help_title")}`), separator(), text(s)], stateId("hp"), ctx, undefined, [
+    row(linkButton(t(ctx.lang, "support_btn"), SUPPORT_URL)),
+  ]);
 }
 
 /** Dispatch a state string to its view. */

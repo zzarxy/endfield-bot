@@ -8,6 +8,7 @@ Invite links use the app id `1568475342174162947`.
 - Add to your account (works in any server and DMs): https://discord.com/oauth2/authorize?client_id=1568475342174162947&integration_type=1&scope=applications.commands
 - Terms of Service: https://endfield-bot.endfield-bot.workers.dev/terms
 - Privacy Policy: https://endfield-bot.endfield-bot.workers.dev/privacy
+- Support server: https://discord.gg/Pw3vZBRU7 (use a permanent invite: Invite → Expire after: Never)
 
 ## Discord application page (Developer Portal → General Information)
 **Name:** Endfield Helper
@@ -69,5 +70,5 @@ Translations were written without native review, so tell me what sounds wrong. B
 ## Before publishing
 1. Test every command in a real server (especially "Show everyone" and notifications) and fix what breaks.
 2. Put the Terms and Privacy URLs and the description into the Developer Portal; upload `assets/avatar.jpg` as the App Icon and the Bot icon.
-3. Add a way to contact the developer (a support server or an address) — Discord asks for it when verifying the bot at 75 servers, and the policies currently list none.
+3. Contact: the support server is linked from /help and from both policies. Make sure its invite never expires.
 4. Re-read each subreddit's rules on self-promotion and post one place at a time.

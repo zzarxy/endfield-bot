@@ -1,6 +1,8 @@
 // Public Terms of Service and Privacy Policy pages, served by the worker itself (/terms, /privacy).
 // Keep these in sync with what the bot really does: see src/notify.ts (stored data) and README.md.
-const UPDATED = "2026-11-07";
+import { SUPPORT_URL } from "./lib/links.ts";
+
+const UPDATED = "2026-11-08";
 
 const PRIVACY = `
 <h1>Privacy Policy</h1>
@@ -36,6 +38,9 @@ const PRIVACY = `
 <h2>Children</h2>
 <p>The bot is only available through Discord, which requires users to meet its minimum age. It does not knowingly collect any data from children.</p>
 
+<h2>Contact</h2>
+<p>Questions about this policy or your data: join the <a href="${SUPPORT_URL}">support server</a> and post in <code>#support</code>.</p>
+
 <h2>Changes</h2>
 <p>If this policy changes, the date above will be updated.</p>
 `;
@@ -65,6 +70,9 @@ const TERMS = `
 
 <h2>Data</h2>
 <p>How data is handled is described in the <a href="/privacy">Privacy Policy</a>.</p>
+
+<h2>Contact</h2>
+<p>Questions or problems: join the <a href="${SUPPORT_URL}">support server</a> and post in <code>#support</code>.</p>
 
 <h2>Changes to these terms</h2>
 <p>These terms may be updated. Continued use of the bot after an update means you accept the new version.</p>

@@ -21,3 +21,24 @@ export async function syncCommands(env: Env): Promise<string> {
     .run();
   return "registered";
 }
+
+/**
+ * Install counts come only from Discord (the bot has no gateway connection, so it never sees joins/leaves).
+ * The cron stores the latest numbers in meta.stats; read them with:
+ *   npx wrangler d1 execute endfield-bot --remote --command "SELECT value FROM meta WHERE key='stats'"
+ */
+export async function syncStats(env: Env): Promise<string> {
+  const res = await discord(env.DISCORD_TOKEN, "GET", "/applications/@me");
+  if (!res.ok) return `failed ${res.status}`;
+  const app: any = await res.json();
+  const stats = JSON.stringify({
+    servers: app.approximate_guild_count ?? null,
+    user_installs: app.approximate_user_install_count ?? null,
+    user_authorizations: app.approximate_user_authorization_count ?? null,
+    at: new Date().toISOString(),
+  });
+  await env.DB.prepare("INSERT INTO meta (key, value) VALUES ('stats', ?1) ON CONFLICT(key) DO UPDATE SET value = ?1")
+    .bind(stats)
+    .run();
+  return "ok";
+}

@@ -10,7 +10,7 @@ import { subscribe, unsubscribe, list, runCron, dueFor, deleteGuildData, type En
 import { legalPage } from "./legal.ts";
 import { discord } from "./lib/discord.ts";
 import { t, localeToLang, LANGS, type Lang } from "./i18n.ts";
-import { syncCommands } from "./register.ts";
+import { syncCommands, syncStats } from "./register.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -278,6 +278,12 @@ export default {
           if (result !== "unchanged") console.log("commands:", result);
         } catch (e) {
           console.log("commands sync error", String(e));
+        }
+        try {
+          const stats = await syncStats(env);
+          if (stats !== "ok") console.log("stats:", stats);
+        } catch (e) {
+          console.log("stats error", String(e));
         }
         await runCron(env);
       })(),

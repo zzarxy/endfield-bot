@@ -18,7 +18,7 @@ Add to your account: <user link>  |  Add to a server: <server link>  |  Support:
 Unofficial, not affiliated with GRYPHLINE/Hypergryph. Data from the Talos Wiki (CC BY-SA). Feedback welcome, especially translation fixes.
 ```
 
-## 2. r/arknights (check rules and flair first)
+## 2. r/Endfield / r/ArknightsEndfield (already posted 2026-11-13). r/ArknightsEndfield removes links to Discord servers, so on that sub use the site link only. Not for r/arknights (mobile game sub).
 **Title:** I made a free Discord bot for Endfield: wiki cards, an AIC factory calculator and banner timers in your timezone
 
 **Body:**
@@ -38,7 +38,7 @@ You can add it to your own account and use it in any server or DM without asking
 Fan project, not affiliated with GRYPHLINE/Hypergryph. Data is from the Endfield Talos Wiki (CC BY-SA), so it can be incomplete. I wrote the translations without native review, so tell me what sounds wrong.
 ```
 
-## 3. r/Discord_Bots (check the pinned rules and the right flair/thread first)
+## 3. r/Discord_Bots: DO NOT POST (rule 1 bans advertising except as an answer to someone's question). Use this only as a reply when someone asks for a game wiki/tool bot.
 **Title:** Endfield Helper: free bot for Arknights: Endfield, runs on Cloudflare Workers (no gateway), 8 languages
 
 **Body:**

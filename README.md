@@ -1,6 +1,12 @@
-# Endfield bot
+# Endfield Helper
 
-Discord bot for **Arknights: Endfield**: operator/weapon/gear/item/enemy cards, AIC production-chain
+[Add to a server](https://discord.com/oauth2/authorize?client_id=1568475342174162947&scope=bot+applications.commands&permissions=3072) ·
+[Add to your account](https://discord.com/oauth2/authorize?client_id=1568475342174162947&integration_type=1&scope=applications.commands) ·
+[Site](https://endfield-bot.endfield-bot.workers.dev) · [Support server](https://discord.gg/rj4GBuFXh4)
+
+![Factory calculator](public/img/factory.png)
+
+Unofficial fan project, not affiliated with GRYPHLINE or Hypergryph. Discord bot for **Arknights: Endfield**: operator/weapon/gear/item/enemy cards, AIC production-chain
 calculator, banners/events/reset timers and channel notifications. Data comes from the
 [Endfield Talos Wiki](https://endfield.wiki.gg) (CC BY-SA 4.0).
 
@@ -24,6 +30,16 @@ The language follows each user's Discord client (`interaction.locale`); channel 
 - UI strings live in `src/i18n.ts` (typed, so a missing key fails the build). They were written without a native-speaker
   review; corrections are welcome.
 - Slash commands are re-registered by the worker's cron whenever `src/commands.ts` or the translations change.
+
+## Free and Supporter
+Every lookup feature is free. A server can subscribe one notification channel for free; `src/lib/entitlements.ts` holds the
+limits and reads the `entitlements` table. Optional paid Supporter plans (more channels, later extras) are planned and will
+run in a separate private service, so this repository stays the complete free bot.
+
+## License
+Code: [AGPL-3.0](LICENSE). Game data in `data/` is from the Endfield Talos Wiki under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); keep the attribution if you reuse it.
+If you run a modified copy as a public bot, the AGPL requires you to publish your changes.
 
 ## Support
 Support server: https://discord.gg/rj4GBuFXh4 (linked from `/help` and the policy pages; the link lives in `src/lib/links.ts`).

@@ -3,3 +3,4 @@ node_modules/
 .dev.vars
 data/raw/
 .dev-key.pem
+docs/bookmarks.html

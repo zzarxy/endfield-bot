@@ -60,7 +60,7 @@ Interface in **English, Русский, Українська, Español, 日本�
 - **Works everywhere** — add it to a server, or to your own account and use it in any server or DM without asking an admin.
 - **Doesn't spam channels** — answers are private until you press **Show everyone**.
 - **Always up to date** — game data is synced from the Endfield Talos Wiki every night.
-- **Free** — no paywalls, no votes required.
+- **Free** — every lookup feature is free, no votes required. An optional Supporter plan (more notification channels, later extras) will support the project.
 - **Privacy-friendly** — reads no messages; stores only what channel notifications need. [Privacy Policy](https://endfield-bot.endfield-bot.workers.dev/privacy) · [Terms](https://endfield-bot.endfield-bot.workers.dev/terms)
 
 ---
@@ -68,7 +68,7 @@ Interface in **English, Русский, Українська, Español, 日本�
 <!-- END LONG -->
 
 ## FAQ (discordbotlist, up to 10)
-1. **Is it free?** — Yes. Every command is free and nothing is locked behind votes.
+1. **Is it free?** — Yes. Every command is free and nothing is locked behind votes. A server can post notifications to 1 channel for free; an optional Supporter plan for more channels may come later.
 2. **Can I use it without being a server admin?** — Yes. Use “Add to my account” and the commands work in any server or DM; replies stay private unless you press Show everyone.
 3. **Where does the data come from?** — From the Endfield Talos Wiki (CC BY-SA 4.0), synced every night. If something is missing or wrong on the wiki, it will be the same in the bot.
 4. **Which languages are supported?** — English, Russian, Ukrainian, Spanish, Japanese, Korean, Simplified and Traditional Chinese. The bot follows your Discord language. Skill and item descriptions are English only because the wiki has them only in English.

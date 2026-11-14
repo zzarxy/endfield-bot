@@ -2,7 +2,7 @@
 // Keep these in sync with what the bot really does: see src/notify.ts (stored data) and README.md.
 import { SUPPORT_URL } from "./lib/links.ts";
 
-const UPDATED = "2026-11-08";
+const UPDATED = "2026-11-14";
 
 const PRIVACY = `
 <h1>Privacy Policy</h1>
@@ -62,8 +62,11 @@ const TERMS = `
   <li>Server notification settings can be changed only by members with the Manage Server permission.</li>
 </ul>
 
+<h2>Free use and Supporter plans</h2>
+<p>Every command the bot has today is free, and the lookup features (cards, factory calculator, banners, events, resets) will stay free. A server can subscribe one notification channel for free. Optional paid "Supporter" plans may be offered to support the project and unlock extras such as more notification channels. Prices, what a plan includes and what extra data it stores will be shown here and in <code>/help</code> before anything can be bought.</p>
+
 <h2>Availability and changes</h2>
-<p>The bot is provided free of charge, <strong>"as is" and without warranties</strong> of any kind. It may be changed, limited, interrupted or shut down at any time, and access may be refused to anyone who breaks these terms. To stop using it, remove it from your server and, if you used notifications, run <code>/privacy-delete</code> first.</p>
+<p>The free bot is provided free of charge, <strong>"as is" and without warranties</strong> of any kind. It may be changed, limited, interrupted or shut down at any time, and access may be refused to anyone who breaks these terms. To stop using it, remove it from your server and, if you used notifications, run <code>/privacy-delete</code> first.</p>
 
 <h2>Liability</h2>
 <p>To the extent allowed by law, the developer is not liable for any loss caused by using the bot or by wrong or missing game information.</p>

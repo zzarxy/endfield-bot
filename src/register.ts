@@ -40,5 +40,12 @@ export async function syncStats(env: Env): Promise<string> {
   await env.DB.prepare("INSERT INTO meta (key, value) VALUES ('stats', ?1) ON CONFLICT(key) DO UPDATE SET value = ?1")
     .bind(stats)
     .run();
+  const day = new Date().toISOString().slice(0, 10);
+  await env.DB.prepare(
+    `INSERT INTO stats_daily (day, servers, user_installs, user_authorizations) VALUES (?1, ?2, ?3, ?4)
+     ON CONFLICT(day) DO UPDATE SET servers = ?2, user_installs = ?3, user_authorizations = ?4`,
+  )
+    .bind(day, app.approximate_guild_count ?? null, app.approximate_user_install_count ?? null, app.approximate_user_authorization_count ?? null)
+    .run();
   return "ok";
 }

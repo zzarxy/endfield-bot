@@ -6,6 +6,8 @@ import { wikiCard, suggest } from "./wiki.ts";
 import { choices } from "./lib/search.ts";
 import { data, producible, allRecipeItems } from "./data/index.ts";
 import { FLAG_EPHEMERAL, FLAG_V2, container, text, row, linkButton, BRAND_COLOR, type Component } from "./lib/ui.ts";
+import { guildTier, CHANNEL_LIMIT } from "./lib/entitlements.ts";
+import { SUPPORT_URL } from "./lib/links.ts";
 import { subscribe, unsubscribe, list, runCron, dueFor, deleteGuildData, type Env, type Sub } from "./notify.ts";
 import { legalPage } from "./legal.ts";
 import { landingPage } from "./site.ts";
@@ -140,8 +142,16 @@ async function handleNotify(env: Env, i: any): Promise<Response> {
   }
   // subscribe: language defaults to the server's language, then the user's
   const postLang: Lang = (LANGS as string[]).includes(opt(o, "language")) ? opt(o, "language") : localeToLang(i.guild_locale ?? i.locale);
-  // check the bot can post there first
   const channel = opt(o, "channel");
+  // free servers: 1 channel; re-subscribing the same channel only edits it
+  const existing = await list(env, i.guild_id);
+  if (!existing.some((x) => x.channel_id === channel)) {
+    const tier = await guildTier(env, i.guild_id);
+    if (existing.length >= CHANNEL_LIMIT[tier]) {
+      return notice(t(lang, "nt_limit", { channel: existing[0].channel_id }), [row(linkButton(t(lang, "support_btn"), SUPPORT_URL))]);
+    }
+  }
+  // check the bot can post there first
   const test = await discord(env.DISCORD_TOKEN, "POST", `/channels/${channel}/messages`, {
     flags: FLAG_V2,
     components: [container(BRAND_COLOR, [text(t(postLang, "nt_test"))])],

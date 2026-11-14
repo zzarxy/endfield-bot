@@ -3,7 +3,7 @@
 import { ButtonStyle } from "discord-api-types/v10";
 import { data, factory, span, timeline, itemByName, localName } from "./data/index.ts";
 import { t, type Lang, type Key } from "./i18n.ts";
-import { SUPPORT_URL } from "./lib/links.ts";
+import { INVITE_URL, SUPPORT_URL } from "./lib/links.ts";
 import { findExact } from "./lib/search.ts";
 import { renderTree, fmtRate } from "./lib/factory.ts";
 import { nextDailyReset, nextWeeklyReset } from "./lib/time.ts";
@@ -35,6 +35,7 @@ const serverName = (id: string, ctx: Ctx) => t(ctx.lang, id === "ASIA" ? "server
 function frame(accent: number, body: Component[], state: string, ctx: Ctx, wikiPage?: string, extraRows: Component[] = []) {
   const actions: Component[] = [];
   if (wikiPage) actions.push(linkButton(t(ctx.lang, "wiki"), wikiUrl(wikiPage)));
+  if (ctx.shared) actions.push(linkButton(t(ctx.lang, "add_bot_btn"), INVITE_URL));
   if (!ctx.shared) actions.push(button(t(ctx.lang, "show_everyone"), `pub${SEP}${state}`, { style: ButtonStyle.Success }));
   const inner = [...body, ...extraRows, separator(), footer(data.syncedAt, ctx.lang)];
   if (actions.length) inner.push(row(...actions));

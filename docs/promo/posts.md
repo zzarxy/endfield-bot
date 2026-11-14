@@ -62,7 +62,7 @@ Subject: Endfield Helper: Discord bot for your Bots & Integrations category
 Hello,
 I built Endfield Helper, a free fan-made Discord bot for Arknights: Endfield (wiki cards, an AIC factory calculator, banner and reset timers, 8 languages). Your GitHub projects directory has a "Bots & Integrations" category, but I could not find an Endfield Discord bot in it.
 Page: https://endfield-bot.endfield-bot.workers.dev
-Source: <repo link, once public>
+Source: https://github.com/zzarxy/endfield-bot
 Could you list it? It is unofficial and not affiliated with GRYPHLINE/Hypergryph; game data is from the Talos Wiki (CC BY-SA 4.0).
 Thanks!
 ```

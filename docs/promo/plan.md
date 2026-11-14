@@ -8,7 +8,7 @@ Measure: `npx wrangler d1 execute endfield-bot --remote --command "SELECT * FROM
 |---|---|---|---|
 | 11-14 | Free/Supporter boundary in code (1 channel, entitlements, Add button on shared cards, daily stats) | Claude | done |
 | 11-15..17 | Bot lists without captcha: discord.bots.gg, discords.com, discordlist.gg, botlist.me (texts: docs/listing.md) | Claude via browser, owner confirms each | todo |
-| 11-15 | Open the repo (history secret scan, AGPL-3.0 + CC BY-SA data, topics `arknights-endfield`) | Claude, owner confirms | todo |
+| 11-14 | Repo opened: history cleaned (noreply email, no bookmarks file), AGPL-3.0 + CC BY-SA data, topics set | Claude | done |
 | 11-17 | Email Endfield Hub (posts.md #5) | owner sends | todo |
 | 11-18 | Talos wiki Discord: ask admins for a tools mention (posts.md #4) | owner posts | todo |
 | 11-19 | r/Discord_Bots post (posts.md #3) | Claude via browser, owner confirms | todo |

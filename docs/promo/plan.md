@@ -15,6 +15,7 @@ Measure: `npx wrangler d1 execute endfield-bot --remote --command "SELECT * FROM
 | 11-20 | Official Endfield Discord: fan-tools channel (posts.md #1), after reading rules | owner posts | todo |
 | 11-22 | r/arknights is the Arknights (mobile) sub, off-topic for Endfield and promotion needs mod consent: skip. r/Endfield (191k) and r/ArknightsEndfield (112k) already have the post | - | dropped |
 | 11-24..30 | Regional Discords: ES, RU, JA, KO, ID (posts.md #6) | owner posts | todo |
+| 11-14 | r/ArknightsEndfield post removed by Reddit filter after a link edit; text reverted, still removed: modmail (posts.md #8) | owner sends | todo |
 | each new banner / patch | Banner-day post (posts.md #7) | owner / Claude | repeat |
 | ~75 servers | Discord verification, then Discovery | owner | later |
 | 50-100 servers | Whop + premium Worker, start with extra channels and roles | Claude | later |

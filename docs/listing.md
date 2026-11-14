@@ -8,6 +8,8 @@ Arknights: Endfield wiki in Discord: operator cards, AIC factory planner, banner
 
 ## Long description (Markdown)
 <!-- BEGIN LONG -->
+![Endfield Helper](https://endfield-bot.endfield-bot.workers.dev/img/hero.png)
+
 # Endfield Helper
 
 **The Arknights: Endfield wiki, an AIC factory planner and banner timers — right inside Discord.**

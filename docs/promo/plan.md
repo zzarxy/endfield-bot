@@ -27,3 +27,8 @@ Replies, not ads: when someone asks about AIC chains, materials or banner dates,
 - r/Endfield rule 8: self-promotion allowed (quality rules apply).
 - r/Discord_Bots rule 1: advertising only as an answer to a question.
 - r/arknights: no commercial promotion; Endfield has its own subs.
+
+## Bot lists status (2026-11-14)
+- discord.bots.gg: submitted, in review (https://discord.bots.gg/bots/1568475342174162947). Requires staying in their Discord server.
+- discords.com: logged in, but the form says "We have not found a bot with this ID registered to the Discord API" for 1568475342174162947. Try again later or check that the bot is set to Public in the Developer Portal (Bot tab).
+- discordlist.gg, botlist.me: not started (both need Discord login; botlist.me /bots/add is 404, find the current add link on the site).

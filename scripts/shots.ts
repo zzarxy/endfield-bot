@@ -6,7 +6,7 @@ import type { Lang } from "../src/i18n.ts";
 
 const OUT = "docs/shots";
 const now = Math.floor(Date.now() / 1000);
-const avatar = "data:image/jpeg;base64," + readFileSync("assets/avatar.jpg").toString("base64");
+const avatar = "data:image/png;base64," + readFileSync("assets/avatar.png").toString("base64");
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -122,17 +122,21 @@ const shots: Shot[] = [
 ];
 
 mkdirSync(OUT, { recursive: true });
+const all: string[] = [];
 for (const s of shots) {
   const ctx: Ctx = { lang: s.lang, now, shared: true }; // shared: the "Show everyone" button is not part of the shot
   const r = render(s.state, ctx);
   const [cmd, ...args] = s.command.split(" ");
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}</style></head><body>
 <div class="msg" id="shot">
-  <div class="cmdline"><img src="${avatar}" style="width:16px;height:16px;border-radius:50%"><span class="u">player</span> used <span class="slash">${esc(cmd)}</span> <span>${esc(args.join(" "))}</span></div>
+  <div class="cmdline"><span style="width:16px;height:16px;border-radius:50%;background:#5865f2;display:inline-block"></span><span class="u">player</span> used <span class="slash">${esc(cmd)}</span> <span>${esc(args.join(" "))}</span></div>
   <img class="av" src="${avatar}">
   <div class="head"><span class="name">Endfield Helper</span><span class="app">APP</span><span class="time">Today at 12:00</span></div>
   ${r.components.map((c) => comp(c, s.lang)).join("")}
 </div></body></html>`;
   writeFileSync(`${OUT}/${s.name}.html`, html);
+  all.push(html.split("<body>")[1].split("</body>")[0].replace('id="shot"', `id="${s.name}"`));
   console.log(`${OUT}/${s.name}.html`);
 }
+// all shots on one page, one element per shot (#<name>), for batch screenshots
+writeFileSync(`${OUT}/all.html`, `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}</style></head><body>${all.join("")}</body></html>`);

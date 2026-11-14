@@ -69,6 +69,6 @@ Translations were written without native review, so tell me what sounds wrong. B
 
 ## Before publishing
 1. Test every command in a real server (especially "Show everyone" and notifications) and fix what breaks.
-2. Put the Terms and Privacy URLs and the description into the Developer Portal; upload `assets/avatar.jpg` as the App Icon and the Bot icon.
+2. Put the Terms and Privacy URLs and the description into the Developer Portal; upload `assets/avatar.png` as the App Icon and the Bot icon.
 3. Contact: the support server is linked from /help and from both policies. The invite is permanent.
 4. Re-read each subreddit's rules on self-promotion and post one place at a time.

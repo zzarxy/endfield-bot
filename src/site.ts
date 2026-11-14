@@ -21,7 +21,7 @@ export function landingPage(): string {
 <title>Endfield Helper · Arknights: Endfield Discord bot</title>
 <meta name="description" content="Free Discord bot for Arknights: Endfield: operator, weapon, gear and item cards, AIC factory planner, banner and reset timers in 8 languages.">
 <meta property="og:title" content="Endfield Helper"><meta property="og:description" content="Arknights: Endfield wiki, AIC factory planner and banner timers inside Discord.">
-<meta property="og:image" content="/img/operator.png"><link rel="icon" href="/img/avatar.jpg">
+<meta property="og:image" content="/img/operator.png"><link rel="icon" href="/img/avatar.png">
 <style>
 :root{color-scheme:dark;--bg:#0f1115;--card:#171a21;--line:#262a33;--text:#e7e9ee;--muted:#9aa1ad;--accent:#fff200}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,"Segoe UI",sans-serif}
@@ -46,7 +46,7 @@ footer a{margin:0 10px}
 </style></head><body>
 <div class="wrap">
 <header>
-  <img src="/img/avatar.jpg" alt="Endfield Helper">
+  <img src="/img/avatar.png" alt="Endfield Helper">
   <h1>Endfield Helper</h1>
   <p class="tag">The Arknights: Endfield wiki, an AIC factory planner and banner timers — right inside Discord.</p>
   <div class="cta">

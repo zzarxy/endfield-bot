@@ -112,15 +112,17 @@ const channels: any[] = await api("GET", `/guilds/${GUILD}/channels`);
 const ids: Record<string, string> = {};
 const mention = (key: string) => (ids[key] ? `<#${ids[key]}>` : `#${CHANNELS.find((c) => c.key === key)!.name}`);
 
+// Only adds bits: Discord refuses (50013) to remove allows/denies for permissions the bot itself doesn't hold.
 function overwrites(existing: any[], access: Access | undefined): any[] {
-  const keep = (existing ?? []).filter((o) => o.id !== GUILD && o.id !== botRole.id);
-  if (access === "readonly") return [...keep,
-    { id: GUILD, type: 0, allow: "0", deny: String(P.SEND | P.CREATE_PUBLIC_THREADS | P.SEND_IN_THREADS) },
-    { id: botRole.id, type: 0, allow: String(BOT_ALLOW), deny: "0" }];
-  if (access === "private") return [...keep,
-    { id: GUILD, type: 0, allow: "0", deny: String(P.VIEW) },
-    { id: botRole.id, type: 0, allow: String(BOT_ALLOW), deny: "0" }];
-  return existing ?? [];
+  const list = (existing ?? []).map((o) => ({ id: o.id, type: o.type, allow: String(o.allow), deny: String(o.deny) }));
+  const merge = (id: string, allow: bigint, deny: bigint) => {
+    const o = list.find((x) => x.id === id) ?? (list.push({ id, type: 0, allow: "0", deny: "0" }), list[list.length - 1]);
+    o.allow = String((BigInt(o.allow) | allow) & ~deny);
+    o.deny = String((BigInt(o.deny) | deny) & ~allow);
+  };
+  if (access === "readonly") { merge(GUILD, 0n, P.SEND | P.CREATE_PUBLIC_THREADS | P.SEND_IN_THREADS); merge(botRole.id, BOT_ALLOW, 0n); }
+  if (access === "private") { merge(GUILD, 0n, P.VIEW); merge(botRole.id, BOT_ALLOW, 0n); }
+  return list;
 }
 const sameOverwrites = (a: any[], b: any[]) =>
   JSON.stringify((a ?? []).map((o) => [o.id, String(o.allow), String(o.deny)]).sort()) ===
@@ -157,7 +159,8 @@ async function ensure(spec: Spec) {
   }
   ids[spec.key] = found.id;
   const diff: Record<string, unknown> = {};
-  if (found.type === 0 && spec.type === 5) diff.type = 5;
+  // the community updates/rules channel must stay a text channel; converted after the settings move below
+  if (found.type === 0 && spec.type === 5 && ![guild.public_updates_channel_id, guild.rules_channel_id].includes(found.id)) diff.type = 5;
   if ("topic" in body && (found.topic ?? "") !== body.topic) diff.topic = body.topic;
   if ("parent_id" in body && body.parent_id !== undefined && found.parent_id !== body.parent_id && body.parent_id !== null) diff.parent_id = body.parent_id;
   if ("rate_limit_per_user" in body && found.rate_limit_per_user !== body.rate_limit_per_user) diff.rate_limit_per_user = body.rate_limit_per_user;
@@ -193,8 +196,18 @@ if (ids.modlog) { settings.public_updates_channel_id = ids.modlog; settings.safe
 if (ids.general) settings.system_channel_id = ids.general;
 const settingsDiff = Object.fromEntries(Object.entries(settings).filter(([k, v]) => guild[k] !== v));
 if (!guild.icon) settingsDiff.icon = "data:image/png;base64," + readFileSync("public/img/avatar.png").toString("base64");
+// changing the Community Updates channel needs Administrator, which the bot doesn't get; it is a manual step
+const manual: string[] = [];
+const pubUpdates = settingsDiff.public_updates_channel_id;
+delete settingsDiff.public_updates_channel_id;
+if (pubUpdates) manual.push("Server Settings > Community > Overview > Community Updates Channel: pick #mod-log, then run this script again (it turns #announcements into a followable announcement channel).");
 if (Object.keys(settingsDiff).length)
   await act(`server settings: ${Object.keys(settingsDiff).join(", ")}`, () => api("PATCH", `/guilds/${GUILD}`, settingsDiff));
+
+// announcements -> announcement channel, now that community updates go to #mod-log
+const ann = channels.find((c) => c.id === ids.announcements);
+if (ann?.type === 0 && !pubUpdates && ann.id !== guild.public_updates_channel_id)
+  await act("make #announcements an announcement (followable) channel", () => api("PATCH", `/channels/${ann.id}`, { type: 5 }));
 
 // ---------- AutoMod ----------
 const rules: any[] = await api("GET", `/guilds/${GUILD}/auto-moderation/rules`);
@@ -309,7 +322,8 @@ async function upsertPost(key: string, body: any, publish = false) {
     return;
   }
   const posted = await act(`post in #${key}`, () => api("POST", `/channels/${channelId}/messages`, body));
-  if (posted && publish) await act(`publish #${key} post to followers`, () => api("POST", `/channels/${channelId}/messages/${posted.id}/crosspost`));
+  const isNews = channels.find((c) => c.id === channelId)?.type === 5;
+  if (posted && publish && isNews) await act(`publish #${key} post to followers`, () => api("POST", `/channels/${channelId}/messages/${posted.id}/crosspost`));
 }
 for (const p of POSTS) await upsertPost(p.key, p.body(), p.publish);
 
@@ -341,5 +355,6 @@ if (ids.help) {
 
 console.log(`\n${planned ? `${planned} change(s) ${APPLY ? "applied" : "planned"}` : "Nothing to change"}.`);
 if (!APPLY && planned) console.log("Run again with --apply to make these changes.");
+if (manual.length) console.log(`\nManual step (needs the server owner):\n- ${manual.join("\n- ")}`);
 if (APPLY && ids.endfield_news)
   console.log(`\nLast step (in Discord): run /notify subscribe in #endfield-news with channel: #endfield-news, server: Americas/Europe, language: English, resets: True.`);

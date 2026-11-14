@@ -8,6 +8,7 @@ import { data, producible, allRecipeItems } from "./data/index.ts";
 import { FLAG_EPHEMERAL, FLAG_V2, container, text, row, linkButton, BRAND_COLOR, type Component } from "./lib/ui.ts";
 import { subscribe, unsubscribe, list, runCron, dueFor, deleteGuildData, type Env, type Sub } from "./notify.ts";
 import { legalPage } from "./legal.ts";
+import { landingPage } from "./site.ts";
 import { discord } from "./lib/discord.ts";
 import { t, localeToLang, LANGS, type Lang } from "./i18n.ts";
 import { syncCommands, syncStats } from "./register.ts";
@@ -268,7 +269,10 @@ export default {
     if (request.method === "POST") return handle(request, env, ectx);
     const page = legalPage(new URL(request.url).pathname);
     if (page) return new Response(page, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
-    return new Response(`Endfield bot · data ${data.syncedAt}`, { headers: { "Content-Type": "text/plain" } });
+    if (new URL(request.url).pathname === "/") {
+      return new Response(landingPage(), { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
+    }
+    return new Response(`Endfield bot · data ${data.syncedAt}`, { headers: { "Content-Type": "text/plain" }, status: 404 });
   },
   async scheduled(_event: ScheduledController, env: Env, ectx: ExecutionContext) {
     ectx.waitUntil(

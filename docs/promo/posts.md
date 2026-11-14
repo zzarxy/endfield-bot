@@ -83,3 +83,10 @@ Add one line in each language: translations were written without native review, 
 New banner today: <operator / banner name>, ends <date>. /banner shows the start and end in your own timezone, and /notify subscribe posts new banners and events to a channel automatically (1 channel is free).
 Free fan-made bot: <user link>
 ```
+
+## 8. Modmail to r/ArknightsEndfield (post removed by Reddit's spam filter on 2026-11-14)
+Send via https://www.reddit.com/message/compose?to=/r/ArknightsEndfield
+Subject: Post caught by the spam filter, could you approve it?
+```
+Hi mods! My post "Hi everyone! I built a free, Discord bot for Endfield and would love feedback" (https://www.reddit.com/r/ArknightsEndfield/comments/1xq630p/) was removed by Reddit's spam filter, probably because I edited a link in it. It is a free, non-commercial fan tool with no ads or paywall, and it has no Discord server link in the post (only the bot's add link). Could you approve it, or tell me what to change to follow rule 3? Thank you!
+```
